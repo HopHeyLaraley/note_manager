@@ -22,8 +22,8 @@ def output_note(note):
     print(f'Заголовок заметки: {note['titles']}')
     print(f'Содержание заметки: {note['content']}')
     print(f'Статус: {note['status']}')
-    print(f'Дата создания: {note['created_date']}')
-    print(f'Срок выполнения: {note['issue_date']}')
+    print(f'Дата создания: {note['created_date'][:-4]}')
+    print(f'Срок выполнения: {note['issue_date'][:-4]}')
 
 note = input_note()
 output_note(note)
