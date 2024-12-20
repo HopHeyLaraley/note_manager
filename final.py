@@ -1,19 +1,25 @@
+import datetime
+
 class Note:
+    id = 0
     def __init__(self):
-        self.titles = []
+        self.__id = Note.id
         self.username = input('Введите имя: ')
         i = 0
+        titles = []
         while True:
             elem = input(f'Введите заголовок заметки {i + 1} или пустую строку для пропуска: ')
             if elem == '':
                 break
             else:
-                self.titles.append(elem)
+                titles.append(elem)
                 i += 1
+        self.titles = set(titles)
         self.content = input('Введите содержимое заметки: ')
         self.status = input('Введите статус заметки: ')
         self.created_date = self.__correct_date('created')
         self.issue_date = self.__correct_date('issue')
+        Note.id += 1
 
     def __correct_date(self, date_of):
         if date_of == 'created':
@@ -40,16 +46,15 @@ class Note:
             }
 
     def show_note(self):
+        print()
         print(f'Имя пользователя: {self.username}')
-        print(f'Заголовок заметки: {self.titles}')
+        print(f'Заголовки заметки: ')
+        print(f'{"\n".join("- " + elem for elem in self.titles)}')
         print(f'Содержимое заметки: {self.content}')
         print(f'Статус: {self.status}')
-        if self.created_date['year'] != self.issue_date['year']:
-            print(f'Дата создания: {self.created_date['day']}-{self.created_date['month']}-{self.created_date['year']}')
-            print(f'Срок выполнения: {self.issue_date['day']}-{self.issue_date['month']}-{self.issue_date['year']}')
-        else:
-            print(f'Дата создания: {self.created_date['day']}-{self.created_date['month']}')
-            print(f'Срок выполнения: {self.issue_date['day']}-{self.issue_date['month']}')
+        print(f'Дата создания: {self.created_date['day']}-{self.created_date['month']}{"-" + str(self.created_date['year']) if self.created_date['year'] != datetime.date.today().year else ""}')
+        print(f'Срок выполнения: {self.issue_date['day']}-{self.issue_date['month']}{"-" + str(self.issue_date['year']) if self.issue_date['year'] != datetime.date.today().year else ""}')
+        print()
 
 
 note = Note()
