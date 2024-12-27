@@ -25,6 +25,7 @@ class Note:
         Note.id += 1
 
     # метод цикличного ввода заголовков
+    # задание add_titles_loop
     def __input_titles(self):
         i = 0
         titles = []
@@ -38,6 +39,7 @@ class Note:
         return set(titles)
 
     # метод выбора статуса из предложенных или добавления новых статусов
+    # задание update_status
     def __input_status(self):
         while True:
             try:
@@ -60,11 +62,13 @@ class Note:
                 print('Выберите статус из предложенных')
 
     # метод добавления нового статуса к существующим
+    # задание update_status
     def __add_new_status(self, status):
         last_key = list(Note.statuses.keys())[-1]
         Note.statuses[last_key+1] = status
 
     # метод для изменения статуса заметки
+    # задание update_status
     def change_status_menu(self):
         print()
         while True:
@@ -107,6 +111,7 @@ class Note:
         return date.strftime("%d-%m")
 
     # метод для проверки истечения срока дедлайна
+    # задание check_deadline
     def check_deadline(self):
         issue = self.issue_date.timestamp()
         today = datetime.today().timestamp()
@@ -120,6 +125,7 @@ class Note:
             return f'До дедлайна еще {days_left} {self.__days_in_rus(days_left)}'
 
     # вспомогательный метод для склонения слова "день" для N дней
+    # задание check_deadline
     def __days_in_rus(self, n):
         if 11 <= n%100 <= 19:
             return 'дней'
@@ -179,6 +185,7 @@ def change_by_id():
 
 # дальше идут 3 функции для удаления заметок по 3 критериям
 # 1 - функция для удаления по id
+# задание delete_note
 def del_by_id():
     id = get_id()
     if id is None:
@@ -187,6 +194,7 @@ def del_by_id():
     print('Заметка удалена!')
 
 # 2 - функция для удаления по имени пользователя
+# задание delete_note
 def del_by_username():
     name = input('Введите имя пользователя: ')
     del_count = 0
@@ -203,6 +211,7 @@ def del_by_username():
         print(f'Удалено заметок: {del_count}')
 
 # 3 - функция для удаления по заголовкам
+# задание delete_note
 def del_by_title():
     ttl = input('Введите заголовок: ')
     del_count = 0
@@ -219,6 +228,7 @@ def del_by_title():
         print(f'Удалено заметок: {del_count}')
 
 # №5 меню - функция удаления заметки по ID
+# задание delete_note
 def delete_note():
     while True:
         print('По какому критерию удалить заметки?:\n1.По ID\n2.По имени пользователя\n3.По заголовку\n0.Вернуться')
@@ -256,6 +266,7 @@ action_names = {
 }
 
 # словарь для связи пунктов меню с функциями
+# задание multiple_notes (все функции)
 actions = {
     1: add_note,
     2: show_all,
@@ -267,9 +278,11 @@ actions = {
 
 # словарь для хранения всех записей
 # ключ - ID заметки, значение - сама заметка
+# задание multiple_notes
 notes = {}
 
 # функция с меню для удобного управления пользователя
+# задание multiple_notes
 def main_menu():
     print('Добро пожаловать в "Менеджер заметок"! Вы можете добавить новую заметку.')
     while True:

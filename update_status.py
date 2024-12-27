@@ -48,7 +48,7 @@ class Note:
                 print("Введите корректную дату")
 
     def __format_date(self, date):
-        return date.strftime("%d-%m-%Y")
+        return date.strftime("%d-%m")
 
     def show_note(self):
         print()
