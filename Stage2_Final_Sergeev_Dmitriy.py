@@ -1,5 +1,6 @@
-import datetime
 from datetime import datetime
+
+# добавил еще другую версию, где некоторая часть кода вынесена в модули для лучшей читабельности
 
 class Note:
     id = 0
