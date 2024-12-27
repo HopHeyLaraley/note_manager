@@ -103,7 +103,7 @@ def del_by_title():
     del_count = 0
     del_indexes = []
     for i, val in notes.items():
-        if ttl in val.titles:
+        if ttl.lower() in val.titles:
             del_indexes.append(i)
             del_count += 1
     for i in del_indexes:
