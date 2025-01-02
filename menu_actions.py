@@ -4,9 +4,11 @@
 # 4: "Изменить статус заметки по ID",
 # 5: "Удалить заметку",
 # 6: "Проверить дедлайны",
+# 7: "Изменить заметку по ID",
 # 0: "Выйти"
 
 from note_class import Note, notes
+import update_note
 
 
 def notes_exist():
@@ -38,7 +40,7 @@ def get_id():
         return
     while True:
         usr_input = input("Введите ID (или 'X' для возврата): ")
-        if usr_input in ('x', 'х'):
+        if usr_input.lower() in ('x', 'х'):
             return None
         try:
             note_id = int(usr_input)
@@ -156,5 +158,6 @@ actions = {
     3: show_id,
     4: change_by_id,
     5: delete_note,
-    6: check_deadline
+    6: check_deadline,
+    7: update_note
 }
