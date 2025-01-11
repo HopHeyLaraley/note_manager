@@ -7,7 +7,7 @@
 # 7: "Изменить заметку по ID",
 # 0: "Выйти"
 
-from note_class import Note, notes
+from notes_class import Note, notes
 import update_note
 
 
