@@ -6,6 +6,11 @@ import json
 notes_file_path = 'data/notes.json'
 statuses_file_path = 'data/statuses.json'
 
+# Grade 1. Этап 4: Задание 2 - Загрузка заметок из файла
+# разве что не выполняется критерий оценивания "2.Функция возвращает список словарей"
+# но вместо этого создаются объеты, которые уже сохраняются в словарь
+# состояния чтения файла (1 или 0) используются в файле interface/menu.py в __init__() для
+# продолжения работы или прекращения, если ошибку не исправить
 def load_notes():
     try:
         with open(notes_file_path, 'r', encoding='utf-8') as file:
@@ -26,12 +31,25 @@ def load_notes():
                     }
                     note = Note()
                     note.load(data)
+        return 1
+    # Grade 1. Этап 4: Задание 3 -  Обработка ошибок при работе с файлами
     except FileNotFoundError:
         with open(notes_file_path, 'w') as file:
             file.write('')
-            print('!!! Файл с заметками не был найден !!!')
-            print('!!! Был создан новый файл с заметками !!!')
+            print(f'!!! Файл {notes_file_path} не был найден. Создан новый файл !!!')
+        return 1
+    except json.decoder.JSONDecodeError:
+        print(f'Ошибка при чтении файла {notes_file_path}. Проверьте его содержимое')
+        return 0
+    except PermissionError:
+        print("Ошибка: Недостаточно прав для доступа к файлу.")
+        return 0
 
+# Grade 1. Этап 4: Задание 1 - Сохранение заметок в файл
+# Grade 1. Этап 4: Задание 4 сюда добавить не смог, так как добавление в JSON,
+# может сломать данные, а как это решить, чтобы использовать режим работы 'a', я не понял
+# но и этот код добавляет новые заметки в файл
+# Grade 1. Этап 4: Задание 5 - все сразу сохраняется в JSON
 def save_notes():
     notes_list = []
     for i, note in notes.items():
@@ -50,11 +68,18 @@ def load_statuses():
                 for status in j_file:
                     Note.statuses[last_status_id] = status
                     last_status_id += 1
+        return 1
     except FileNotFoundError:
-        with open(statuses_file_path, 'w') as file:
+        with open(notes_file_path, 'w') as file:
             file.write('')
-            print('!!! Файл со статусами не был найден !!!')
-            print('!!! Был создан новый файл с заметками !!!')
+            print(f'!!! Файл {statuses_file_path} не был найден. Создан новый файл !!!')
+            return 1
+    except json.decoder.JSONDecodeError:
+        print(f'Ошибка при чтении файла {statuses_file_path}. Проверьте его содержимое')
+        return 0
+    except PermissionError:
+        print("Ошибка: Недостаточно прав для доступа к файлу.")
+        return 0
 
 def save_statuses():
     statuses = []
