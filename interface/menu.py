@@ -20,8 +20,10 @@ class Menu:
     menu_actions = {}
 
     def __init__(self):
-        load_notes()
-        load_statuses()
+        if not load_notes():
+            return
+        if not load_statuses():
+            return
         Menu.menu_actions = {
             1: self.add_note,  # Grade 1. Этап 3: Задание 1 - метод создания заметки
             2: self.show_note,  # Grade 1. Этап 3: Задание 3 - метод отображения заметок
