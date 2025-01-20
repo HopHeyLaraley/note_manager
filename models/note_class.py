@@ -1,9 +1,9 @@
 from datetime import datetime
-from data.temp_memory import notes
+
+notes = {}
 
 
 class Note:
-    id = 0
     statuses = {
         # начальные 3 статуса заметки для выбора
         1: 'Выполнено',
@@ -12,14 +12,13 @@ class Note:
     }
 
     def __init__(self):
-        self.__id = Note.id
+        self.__id = None
         self.username = None
         self.titles = None
         self.content = None
         self.status = None
         self.created_date = datetime.today()
         self.issue_date = None
-        Note.id += 1
 
     def to_dict(self):
         return {
@@ -33,6 +32,7 @@ class Note:
         }
 
     def create(self, data):
+        self.__id = data['id']
         self.username = data['username']
         self.titles = data['titles']
         self.content = data['content']
@@ -41,8 +41,6 @@ class Note:
         notes[self.__id] = self
 
     def load(self, data):
-        if data['id'] > Note.id:
-            Note.id = data['id']
         self.__id = data['id']
         self.username = data['username']
         self.titles = data['titles']

@@ -1,4 +1,22 @@
-from data.temp_memory import notes
+from models.note_class import notes
+from uuid import uuid4
+from datetime import datetime
+from models import Note
+
+
+def validate_date(date_str):
+    try:
+        return datetime.strptime(date_str, '%d-%m-%Y')
+    except ValueError:
+        print("Введите корректную дату")
+        return 0
+
+
+def unique_id():
+    return int(uuid4())
+
+def validate_status(status):
+    return status in Note.statuses.keys()
 
 def to_int(value):
     try:
@@ -6,11 +24,13 @@ def to_int(value):
     except ValueError:
         return -1
 
+
 def notes_exist():
     if not notes:
         print('Пока еще нет заметок')
         return 0
     return 1
+
 
 def find_id():
     if not notes_exist():
