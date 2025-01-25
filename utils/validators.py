@@ -1,7 +1,6 @@
-from models.note_class import notes
 from uuid import uuid4
 from datetime import datetime
-from models import Note
+from db import select_note
 
 
 def validate_date(date_str):
@@ -12,11 +11,21 @@ def validate_date(date_str):
         return 0
 
 
+def date_format(date):
+    try:
+        date = datetime.strptime(date, '%Y-%m-%d %H:%M:%S.%f')
+    except ValueError:
+        date = datetime.strptime(date, '%Y-%m-%d %H:%M:%S')
+    if date.year != datetime.today().year and date.year % 100 == 0:
+        return date.strftime('%d-%m-%Y')
+    elif date.year != datetime.today().year and date.year % 100 != 0:
+        return date.strftime('%d-%m-%y')
+    return date.strftime('%d-%m')
+
+
 def unique_id():
     return int(uuid4())
 
-def validate_status(status):
-    return status in Note.statuses.keys()
 
 def to_int(value):
     try:
@@ -25,15 +34,10 @@ def to_int(value):
         return -1
 
 
-def notes_exist():
+def find_id():
+    notes = select_note()
     if not notes:
         print('Пока еще нет заметок')
-        return 0
-    return 1
-
-
-def find_id():
-    if not notes_exist():
         return
     while True:
         usr_input = input("Введите ID (или 'X' для возврата): ")
@@ -41,7 +45,7 @@ def find_id():
             return None
         try:
             note_id = int(usr_input)
-            if note_id in notes.keys():
+            if note_id in [i for i in notes.keys()]:
                 return note_id
             else:
                 print("ID не существует\n")

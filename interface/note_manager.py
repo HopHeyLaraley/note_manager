@@ -1,31 +1,10 @@
-from utils import *
-from data import *
-from models import *
+import json
+from models import Note
+from db import insert_note, select_note, update_note, delete_note
+from utils import validate_date, to_int, find_id
 
 
-class CreateNote:
-    # добавление заметок
-    def main(self):
-        note = Note()
-        data = self.input_note_data()
-        note.create(data)
-
-    # метод ввода полей новой заметки
-    def input_note_data(self):
-        name = input('Введите имя: ')
-        titles = self.input_titles()
-        content = input('Введите содержимое заметки: ')
-        status = self.input_status()
-        issue = self.input_date()
-        return {
-            'id': unique_id(),
-            'username': name,
-            'titles': titles,
-            'content': content,
-            'status': status,
-            'issue': issue,
-        }
-
+class InputNoteData:
     def input_titles(self):
         i = 0
         titles = []
@@ -46,9 +25,8 @@ class CreateNote:
                 print(f'{i}.{sts}')
             if new_status_option:
                 print('0.Добавить новый статус')
-            status = input()
-            status = to_int(status)
-            if validate_status(status):
+            status = to_int(input())
+            if status in Note.statuses.keys():
                 # выбран существующий статус - в заметке укажем этот статус
                 return Note.statuses[status]
             elif status == 0 and new_status_option:
@@ -60,7 +38,7 @@ class CreateNote:
         status = input('Введите новый статус: ')
         last_key = list(Note.statuses.keys())[-1]
         Note.statuses[last_key + 1] = status
-        save_statuses()
+        # save_statuses()
 
     def input_date(self):
         while True:
@@ -72,103 +50,53 @@ class CreateNote:
                 continue
 
 
+class CreateNote(InputNoteData):
+    # добавление заметок
+    def main(self):
+        fields = self.input_note_data()
+        note = Note(fields)
+        insert_note(note)
+
+    # метод ввода полей новой заметки
+    def input_note_data(self):
+        name = input('Введите имя: ')
+        titles = self.input_titles()
+        content = input('Введите содержимое заметки: ')
+        status = self.input_status()
+        issue = self.input_date()
+        return {
+            'username': name,
+            'titles': titles,
+            'content': content,
+            'status': status,
+            'issue_date': issue,
+        }
+
+
 class ReadNote:
     # показать заметки: 1-все, 2-по id
     def main(self):
-        while True:
-            print('Уточните действие:\n1.Показать все заметки\n2.Показать одну заметку\n0.Назад')
-            choice = input()
-            choice = to_int(choice)
-            if choice == 1:
-                self.read_all()
-                break
-            elif choice == 2:
-                note_id = find_id()
-                if note_id or note_id == 0:
-                    self.read_one(note_id)
-                break
-            elif choice == 0:
-                break
-            else:
-                print('Выберите действие из предложенных')
-                continue
+        self.read_all()
         return
+
+    def show_note(self, id, data):
+        note = Note(data, id)
+        note.show()
 
     def read_all(self):
-        if not notes_exist():
-            return -1
-        for i in notes.keys():
-            notes[i].show()
-        return notes
+        notes = select_note()
+        if not notes:
+            print('Пока еще нет заметок')
+            return
+        for i, fields in notes.items():
+            self.show_note(id=i, data=fields)
 
     def read_one(self, note_id):
-        notes[note_id].show()
+        note = select_note(note_id)[note_id]
+        self.show_note(id=note_id, data=note)
 
 
-class SearchNote:
-    # поиск заметки
-    def main(self):
-        if not notes_exist():
-            return
-        result = self.search_menu()
-        while True:
-            if len(result.keys()) == 0:
-                print(f'Не найдено заметок по ключевому слову')
-                break
-            else:
-                print(f'Найдено {len(result.keys())} заметок. Вывести их? (y/n или д/н)')
-                a = input()  # временная переменная для хранения ответа пользователя
-                if a.lower() == 'y' or a.lower() == 'д':
-                    for i, note in result.items():
-                        note.show()
-                    break
-                elif a.lower() == 'n' or a.lower() == 'н':
-                    break
-                else:
-                    print('Я вас не понимаю')
-                    continue
-        return
-
-    def search_by_status(self, search_status):
-        result = {}
-        for i, note in notes.items():
-            if note.status == search_status:
-                result[i] = note
-        return result
-
-    def search_by_keyword(self, user_keyword):
-        result = {}
-
-        for i, note in notes.items():
-            if user_keyword in note.username or \
-                    user_keyword in note.titles or \
-                    user_keyword in note.content:
-                result[i] = note
-        return result
-
-    def search_menu(self):
-        while True:
-            print('По какому критерию искать заметки?')
-            print('1.По статусу')
-            print('2.По ключевому слову')
-            print('0.Назад')
-            choice = to_int(input())
-            if choice == 1:
-                search_status = CreateNote().input_status(new_status_option=False)
-                result = self.search_by_status(search_status)
-                break
-            elif choice == 2:
-                user_keyword = input('Введите ключевое слово\n')
-                result = self.search_by_keyword(user_keyword)
-                break
-            elif choice == 0:
-                return
-            else:
-                print('Выберите критерий из предложенных')
-        return result
-
-
-class UpdateNote:
+class UpdateNote(InputNoteData):
     # обновление заметки
     def main(self):
         note_id = find_id()
@@ -179,8 +107,10 @@ class UpdateNote:
             'titles': None,
             'content': None,
             'status': None,
-            'issue': None
+            'issue_date': None
         }
+        field = None
+        value = None
         while True:
             print('Текущие значения заметки:')
             ReadNote().read_one(note_id)
@@ -195,26 +125,108 @@ class UpdateNote:
             choice = input()
             choice = to_int(choice)
             if choice == 1:
-                new_data['username'] = input('Введите имя: ')
+                field = 'username'
+                new_data[field] = input('Введите имя: ')
+                value = new_data[field]
                 break
             elif choice == 2:
-                new_data['titles'] = CreateNote().input_titles()
+                field = 'titles'
+                new_data[field] = self.input_titles()
+                value = new_data[field]
                 break
             elif choice == 3:
-                new_data['content'] = input('Введите содержимое заметки: ')
+                field = 'content'
+                new_data[field] = input('Введите содержимое заметки: ')
+                value = new_data[field]
                 break
             elif choice == 4:
-                new_data['status'] = CreateNote().input_status()
+                field = 'status'
+                new_data[field] = self.input_status()
+                value = new_data[field]
                 break
             elif choice == 5:
-                new_data['issue'] = CreateNote().input_date()
+                field = 'issue_date'
+                new_data[field] = self.input_date()
+                value = new_data[field]
                 break
             elif choice == 0:
                 return
             else:
                 print('Выберите поле из предложенных')
                 continue
-        notes[note_id].update(new_data)
+        update_note(note_id, field, value)
+        print('Данные успешно изменены')
+
+
+class SearchNote(InputNoteData):
+    # поиск заметки
+    def main(self):
+        notes = select_note()
+        if not notes:
+            print('Пока еще нет заметок')
+            return
+        result = self.search_menu()
+
+        # print(result)
+        while True:
+            if len(result.keys()) == 0:
+                print(f'Не найдено заметок по ключевому слову')
+                break
+            else:
+                print(f'Найдено {len(result.keys())} заметок. Вывести их? (y/n или д/н)')
+                a = input()  # временная переменная для хранения ответа пользователя
+                if a.lower() == 'y' or a.lower() == 'д':
+                    for i, fields in result.items():
+                        note = Note(values=fields, key=i)
+                        note.show()
+                    break
+                elif a.lower() == 'n' or a.lower() == 'н':
+                    break
+                else:
+                    print('Я вас не понимаю')
+                    continue
+        return
+
+    def search_by_status(self, search_status):
+        result = {}
+        notes = select_note()
+        for i, note in notes.items():
+            if note['status'] == search_status:
+                result[i] = note
+        return result
+
+    def search_by_keyword(self, user_keyword):
+        result = {}
+        notes = select_note()
+        for i, note in notes.items():
+            if user_keyword in note['username'] or \
+                    user_keyword in json.dumps(note['titles']) or \
+                    user_keyword in note['content']:
+                result[i] = note
+        return result
+
+    def search_menu(self):
+        while True:
+            print('По какому критерию искать заметки?')
+            print('1.По статусу')
+            print('2.По ключевому слову')
+            print('0.Назад')
+            choice = to_int(input())
+            if choice == 1:
+                search_status = self.input_status(new_status_option=False)
+                result = self.search_by_status(search_status)
+                key = 'status'
+                break
+            elif choice == 2:
+                user_keyword = input('Введите ключевое слово\n')
+                result = self.search_by_keyword(user_keyword)
+                key = 'keyword'
+                break
+            elif choice == 0:
+                return
+            else:
+                print('Выберите критерий из предложенных')
+        return result
 
 
 class DeleteNote:
@@ -228,11 +240,14 @@ class DeleteNote:
                 print(f'Найдено {len(founded.keys())} заметок. Удалить их? (y/n или д/н)')
                 a = input()  # временная переменная для хранения ответа пользователя
                 if a.lower() == 'y' or a.lower() == 'д':
-                    temp = {}
-                    for i, note in notes.items():
-                        if i in founded.keys():
-                            temp[i] = note
-                    delete_from_dict(temp)
+                    for note_id in founded.keys():
+                        delete_note(note_id)
+                    # temp = {}
+                    # notes = select_note()
+                    # for i, note in notes.items():
+                    #     if i in founded.keys():
+                    #         temp[i] = note
+                    # delete_from_dict(temp)
                     break
                 elif a.lower() == 'n' or a.lower() == 'н':
                     break
@@ -244,6 +259,7 @@ class DeleteNote:
 
 class NoteUtils:
     def check_deadlines(self):
+        notes = select_note()
         for i, note in notes.items():
             deadline = note.check_deadline()
             print(deadline)

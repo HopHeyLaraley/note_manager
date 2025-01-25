@@ -1,1 +1,1 @@
-from .note_class import Note, notes
+from .note_class import Note

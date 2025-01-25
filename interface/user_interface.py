@@ -1,6 +1,5 @@
 from interface.note_manager import CreateNote, ReadNote, SearchNote, UpdateNote, DeleteNote, NoteUtils
-from data import load_notes, load_statuses, save_notes
-from utils.validators import *
+from utils import to_int
 
 
 class Menu:
@@ -15,14 +14,9 @@ class Menu:
         0: "Выйти"
     }
 
-    # словарь для хранения ссылок на функции для пунктов меню
     menu_actions = {}
 
     def __init__(self):
-        if not load_notes():
-            return
-        if not load_statuses():
-            return
         Menu.menu_actions = {
             1: CreateNote().main,  # метод создания заметки
             2: ReadNote().main,  # метод отображения заметок
@@ -44,16 +38,11 @@ class Menu:
         print('Добро пожаловать в "Менеджер заметок"! Вы можете добавить новую заметку.')
         while True:
             self.main_menu_text()
-            action = input()
-            action = to_int(action)
+            action = to_int(input())
             if action == 0:
                 return
             elif action in self.action_names.keys():
-                self.menu_actions[action]()
-                # после каждой опции сохраняем изменения в файл
-                # не для всех опций это нужно, но не хотел дублировать
-                # вызов в каждом методе опций меню
-                save_notes()
+                Menu.menu_actions[action]()
             else:
                 print("Выберите действие из предложенных\n")
                 continue
