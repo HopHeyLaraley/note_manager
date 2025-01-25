@@ -72,6 +72,29 @@ def select_note(id=None):  # может выводить все заметки �
     return from_db_to_dict(field_names, rows)  # нормализация данных из БД
 
 
+def select_notes_by_keyword(field, keyword):
+    conn = sqlite3.connect(db_path)
+    cur = conn.cursor()
+    if field == 'titleandcontent':
+        sql = f'select * from {table_name} where titles like ? or content like ?;'
+        cur.execute(sql, (f'%{keyword}%', f'%{keyword}%'))
+    elif field == 'status':
+        sql = f'select * from {table_name} where status=?;'
+        cur.execute(sql, (keyword,))
+    else:
+        sql = f'''select * from {table_name} where title like ? 
+        or content like ? 
+        or username like ?;'''
+        cur.execute(sql, (f'%{keyword}%', f'%{keyword}%', f'%{keyword}%'))
+    field_names = []
+    for i in cur.description:
+        field_names.append(i[0])
+    rows = cur.fetchall()
+    conn.close()
+
+    return from_db_to_dict(field_names, rows)
+
+
 def update_note(id, field_name, value):
     conn = sqlite3.connect(db_path)
     cur = conn.cursor()

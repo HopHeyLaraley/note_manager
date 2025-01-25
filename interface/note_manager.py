@@ -1,6 +1,6 @@
 import json
 from models import Note
-from db import insert_note, select_note, update_note, delete_note
+from db import insert_note, select_note, update_note, delete_note, select_notes_by_keyword
 from utils import validate_date, to_int, find_id
 
 
@@ -214,13 +214,13 @@ class SearchNote(InputNoteData):
             choice = to_int(input())
             if choice == 1:
                 search_status = self.input_status(new_status_option=False)
-                result = self.search_by_status(search_status)
-                key = 'status'
+                result = select_notes_by_keyword(field='status', keyword=search_status)
+                # result = self.search_by_status(search_status)
                 break
             elif choice == 2:
                 user_keyword = input('Введите ключевое слово\n')
-                result = self.search_by_keyword(user_keyword)
-                key = 'keyword'
+                result = select_notes_by_keyword(field='titleandcontent', keyword=user_keyword)
+                # result = self.search_by_keyword(user_keyword)
                 break
             elif choice == 0:
                 return
