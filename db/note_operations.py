@@ -33,16 +33,18 @@ def from_db_to_dict(fields, rows):
     return note_dict
 
 
-def insert_note(note):
+def save_note_to_db(note, db_file_path=None):
+    if db_file_path is None:
+        db_file_path = db_path
     data = (
         note.username,
-        json.dumps(note.titles),  # для хранения списка в БД, окружаем список кавычками
+        json.dumps(note.titles, ensure_ascii=False),  # для хранения списка в БД, окружаем список кавычками
         note.content,
         note.status,
         note.created_date,
         note.issue_date
     )
-    conn = sqlite3.connect(db_path)
+    conn = sqlite3.connect(db_file_path)
     cur = conn.cursor()
     sql = f'''
     insert into {table_name}
@@ -54,8 +56,10 @@ def insert_note(note):
     conn.close()
 
 
-def select_note(id=None):  # может выводить все заметки или одну - по id
-    conn = sqlite3.connect(db_path)
+def load_notes_from_db(id=None, db_file_path=None):  # может выводить все заметки или одну - по id
+    if db_file_path is None:
+        db_file_path = db_path
+    conn = sqlite3.connect(db_file_path)
     cur = conn.cursor()
     if id is not None:
         sql = f'select * from {table_name} where id={id};'
@@ -72,20 +76,13 @@ def select_note(id=None):  # может выводить все заметки �
     return from_db_to_dict(field_names, rows)  # нормализация данных из БД
 
 
-def select_notes_by_keyword(field, keyword):
+def select_notes_by_keyword(keyword):
     conn = sqlite3.connect(db_path)
     cur = conn.cursor()
-    if field == 'titleandcontent':
-        sql = f'select * from {table_name} where titles like ? or content like ?;'
-        cur.execute(sql, (f'%{keyword}%', f'%{keyword}%'))
-    elif field == 'status':
-        sql = f'select * from {table_name} where status=?;'
-        cur.execute(sql, (keyword,))
-    else:
-        sql = f'''select * from {table_name} where title like ? 
-        or content like ? 
-        or username like ?;'''
-        cur.execute(sql, (f'%{keyword}%', f'%{keyword}%', f'%{keyword}%'))
+
+    sql = f'select * from {table_name} where titles like ? or content like ?;'
+    cur.execute(sql, (f'%{keyword}%', f'%{keyword}%'))
+
     field_names = []
     for i in cur.description:
         field_names.append(i[0])
@@ -95,7 +92,23 @@ def select_notes_by_keyword(field, keyword):
     return from_db_to_dict(field_names, rows)
 
 
-def update_note(id, field_name, value):
+def filter_notes_by_status(status):
+    conn = sqlite3.connect(db_path)
+    cur = conn.cursor()
+
+    sql = f'select * from {table_name} where status=?;'
+    cur.execute(sql, (status,))
+
+    field_names = []
+    for i in cur.description:
+        field_names.append(i[0])
+    rows = cur.fetchall()
+    conn.close()
+
+    return from_db_to_dict(field_names, rows)
+
+
+def update_note_in_db(id, field_name, value):
     conn = sqlite3.connect(db_path)
     cur = conn.cursor()
     sql = f'update {table_name} set {field_name}=? where id=?'
@@ -104,7 +117,7 @@ def update_note(id, field_name, value):
     conn.close()
 
 
-def delete_note(id):
+def delete_note_from_db(id):
     conn = sqlite3.connect(db_path)
     cur = conn.cursor()
     sql = f'delete from {table_name} where id=?'

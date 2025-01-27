@@ -1,6 +1,6 @@
 from uuid import uuid4
 from datetime import datetime
-from db import select_note
+from db import load_notes_from_db
 
 
 def validate_date(date_str):
@@ -16,6 +16,8 @@ def date_format(date):
         date = datetime.strptime(date, '%Y-%m-%d %H:%M:%S.%f')
     except ValueError:
         date = datetime.strptime(date, '%Y-%m-%d %H:%M:%S')
+    except TypeError:
+        date = date
     if date.year != datetime.today().year and date.year % 100 == 0:
         return date.strftime('%d-%m-%Y')
     elif date.year != datetime.today().year and date.year % 100 != 0:
@@ -35,7 +37,7 @@ def to_int(value):
 
 
 def find_id():
-    notes = select_note()
+    notes = load_notes_from_db()
     if not notes:
         print('Пока еще нет заметок')
         return

@@ -1,6 +1,7 @@
 import json
 from models import Note
-from db import insert_note, select_note, update_note, delete_note, select_notes_by_keyword
+from db import save_note_to_db, load_notes_from_db, update_note_in_db, delete_note_from_db
+from db import select_notes_by_keyword, filter_notes_by_status
 from utils import validate_date, to_int, find_id
 
 
@@ -55,7 +56,7 @@ class CreateNote(InputNoteData):
     def main(self):
         fields = self.input_note_data()
         note = Note(fields)
-        insert_note(note)
+        save_note_to_db(note)
 
     # метод ввода полей новой заметки
     def input_note_data(self):
@@ -84,7 +85,7 @@ class ReadNote:
         note.show()
 
     def read_all(self):
-        notes = select_note()
+        notes = load_notes_from_db()
         if not notes:
             print('Пока еще нет заметок')
             return
@@ -92,7 +93,7 @@ class ReadNote:
             self.show_note(id=i, data=fields)
 
     def read_one(self, note_id):
-        note = select_note(note_id)[note_id]
+        note = load_notes_from_db(note_id)[note_id]
         self.show_note(id=note_id, data=note)
 
 
@@ -154,14 +155,14 @@ class UpdateNote(InputNoteData):
             else:
                 print('Выберите поле из предложенных')
                 continue
-        update_note(note_id, field, value)
+        update_note_in_db(note_id, field, value)
         print('Данные успешно изменены')
 
 
 class SearchNote(InputNoteData):
     # поиск заметки
     def main(self):
-        notes = select_note()
+        notes = load_notes_from_db()
         if not notes:
             print('Пока еще нет заметок')
             return
@@ -189,7 +190,7 @@ class SearchNote(InputNoteData):
 
     def search_by_status(self, search_status):
         result = {}
-        notes = select_note()
+        notes = load_notes_from_db()
         for i, note in notes.items():
             if note['status'] == search_status:
                 result[i] = note
@@ -197,7 +198,7 @@ class SearchNote(InputNoteData):
 
     def search_by_keyword(self, user_keyword):
         result = {}
-        notes = select_note()
+        notes = load_notes_from_db()
         for i, note in notes.items():
             if user_keyword in note['username'] or \
                     user_keyword in json.dumps(note['titles']) or \
@@ -206,6 +207,7 @@ class SearchNote(InputNoteData):
         return result
 
     def search_menu(self):
+        with_sql = True
         while True:
             print('По какому критерию искать заметки?')
             print('1.По статусу')
@@ -214,13 +216,17 @@ class SearchNote(InputNoteData):
             choice = to_int(input())
             if choice == 1:
                 search_status = self.input_status(new_status_option=False)
-                result = select_notes_by_keyword(field='status', keyword=search_status)
-                # result = self.search_by_status(search_status)
+                if with_sql:
+                    result = filter_notes_by_status(status=search_status)
+                else:
+                    result = self.search_by_status(search_status)
                 break
             elif choice == 2:
                 user_keyword = input('Введите ключевое слово\n')
-                result = select_notes_by_keyword(field='titleandcontent', keyword=user_keyword)
-                # result = self.search_by_keyword(user_keyword)
+                if with_sql:
+                    result = select_notes_by_keyword(keyword=user_keyword)
+                else:
+                    result = self.search_by_keyword(user_keyword)
                 break
             elif choice == 0:
                 return
@@ -241,7 +247,7 @@ class DeleteNote:
                 a = input()  # временная переменная для хранения ответа пользователя
                 if a.lower() == 'y' or a.lower() == 'д':
                     for note_id in founded.keys():
-                        delete_note(note_id)
+                        delete_note_from_db(note_id)
                     # temp = {}
                     # notes = select_note()
                     # for i, note in notes.items():
@@ -259,7 +265,7 @@ class DeleteNote:
 
 class NoteUtils:
     def check_deadlines(self):
-        notes = select_note()
+        notes = load_notes_from_db()
         for i, note in notes.items():
             deadline = note.check_deadline()
             print(deadline)
